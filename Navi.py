@@ -5,8 +5,65 @@ import urllib3.contrib.pyopenssl
 import ast
 import base64
 import numpy as np
+import pprint
 
 urllib3.contrib.pyopenssl.inject_into_urllib3()
+
+# note: recurses through a json string, continuously unpacking the dictionary as attributes of the class
+class GenericResponse(list):
+    def __init__(self, json_str):
+        if isinstance(json_str, dict):
+            self.__dict__ = json_str
+            self.__list__ = []
+        elif isinstance(json_str, list):
+            self.__list__ = json_str
+        else:
+            json_val = json.loads(json_str)
+            if isinstance(json_val, dict):
+                self.__dict__ = json_val
+                self.__list__ = []
+            elif isinstance(json_val, list):
+                self.__list__ = json_val
+        for d in self.__dict__:
+            if (d == '__list__'):
+                continue
+            try:
+                self.__dict__[d] = GenericResponse(self.__dict__[d])
+            except:
+                pass
+        for i,l in enumerate(self.__list__):
+            try:
+                self.__list__[i] = GenericResponse(l)
+            except:
+                pass
+
+    def __str__(self, level=0):
+        tabinto = ' ' * (level*4)
+        printstr = ''
+        for d in self.__dict__:
+            if (d == '__list__'):
+                if len(self.__dict__[d]) > 0:
+                    printstr += tabinto + '__list__:\n'
+                    printstr += tabinto + '[\n'
+
+                    for i,val in enumerate(self.__dict__[d]):
+                        printstr += tabinto + '[\n'
+                        if isinstance(val, GenericResponse):
+                            added_str = val.__str__(level+1)
+                        else:
+                            added_str = str(val)
+                        printstr += tabinto +  added_str.rstrip() + '\n'
+                        printstr += tabinto + ']\n'
+
+                    printstr += tabinto +  ']'
+            else:
+                if isinstance(self.__dict__[d], GenericResponse):
+                    added_str = self.__dict__[d].__str__(level+1)
+                else:
+                    added_str = str(self.__dict__[d])
+                printstr += tabinto +  str(d) + ':\n'
+                printstr += tabinto +  added_str.rstrip() + '\n'
+        return printstr
 
 class RobotRequest(object):
     def __init__(self, id, name, description, status):
@@ -47,12 +104,40 @@ class BigDataElementRequest(object):
 class AddOdometryRequest(object):
     def __init__(self, timestamp, delta_measurement, p_odo, N=None):
         self.timestamp = timestamp
-        self.deltaMeasurement = (delta_measurement.flatten().tolist())
-        self.pOdo = (p_odo.T.tolist())
+        self.deltaMeasurement = delta_measurement.flatten().tolist()
+        self.pOdo = p_odo.T.tolist()
         self.N = N
 
     def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__)
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
+class VariableRequest(object):
+    def __init__(self, label, variable_type, labels, N=None):
+        self.label = label
+        self.variableType = variable_type
+        self.labels = labels
+        self.N = N
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
+class DistributionRequest(object):
+    def __init__(self, dist_type, params):
+        self.distType = dist_type
+        self.params = params.flatten().tolist()
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
+class BearingRangeRequest(DistributionRequest):
+    def __init__(self, pose2Id, point2Id, bearing, range):
+        self.pose2Id = pose2Id
+        self.point2Id = point2Id
+        self.bearing = bearing
+        self.range = range
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
 class Navi(object):
     def __init__(self, json_auth):
@@ -73,7 +158,18 @@ class Navi(object):
         self.robot_endpoint = "api/v0/users/{1}/robots/{2}"
         self.sessions_endpoint = "api/v0/users/{1}/robots/{2}/sessions"
         self.session_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}"
+        self.nodes_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}/nodes"
+        self.node_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}/nodes/{4}"
+        self.node_labelled_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}/nodes/labelled/{4}"
         self.odo_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}/odometry"
+        self.big_data_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}/nodes/{4}/data"
+        self.big_data_element_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}/nodes/{4}/data/{5}"
+        self.big_data_raw_element_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}/nodes/{4}/data/{5}/raw"
+        self.variable_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}/variables/{4}"
+        self.factors_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}/factors"
+        self.factor_endpoint = "$factorsEndpoint/{4}"
+        self.bearing_range_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}/factors/bearingrange"
+        self.session_ready_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}/ready/{4}"
 
     def getStatus(self):
         request = self.url + '/' + self.status_endpoint
@@ -87,27 +183,27 @@ class Navi(object):
         request = self.url + '/' + self.robots_endpoint
         request = request.replace("{1}", self.user_name)
         response = requests.get(request, auth=self.navi_auth)
-        return json.loads(response.content)
+        return GenericResponse(response.content)
 
     def getRobot(self, robotId):
         request = self.url + '/' + self.robot_endpoint
         request = request.replace("{1}", self.user_name)
         request = request.replace("{2}", robotId)
         response = requests.get(request, auth=self.navi_auth)
-        return json.loads(response.content)
+        return GenericResponse(response.content)
 
     def addRobot(self, robotRequest):
         request = self.url + '/' + self.robot_endpoint
         request = request.replace("{1}", self.user_name)
         request = request.replace("{2}", robotRequest.id)
         response = requests.post(request, data=robotRequest.toJSON(), auth=self.navi_auth)
-        return json.loads(response.content)
+        return GenericResponse(response.content)
 
     def isRobotExisting(self, robotId):
-        robots = self.getRobots()['robots']
+        robots = self.getRobots().robots
         existing = False
-        for i,robot in enumerate(robots):
-            if robot['id'] == robotId:
+        for i,robot in enumerate(robots.__list__):
+            if robot.id == robotId:
                 existing = True
         return existing
 
@@ -116,7 +212,7 @@ class Navi(object):
         request = request.replace("{1}", self.user_name)
         request = request.replace("{2}", robotId)
         response = requests.get(request, auth=self.navi_auth)
-        return json.loads(response.content)
+        return GenericResponse(response.content)
 
     def getSession(self, robotId, sessionId):
         request = self.url + '/' + self.session_endpoint
@@ -124,7 +220,7 @@ class Navi(object):
         request = request.replace("{2}", robotId)
         request = request.replace("{3}", sessionId)
         response = requests.get(request, auth=self.navi_auth)
-        return json.loads(response.content)
+        return GenericResponse(response.content)
 
     def addSession(self, robotId, sessionDetailsRequest):
         request = self.url + '/' + self.session_endpoint
@@ -132,13 +228,13 @@ class Navi(object):
         request = request.replace("{2}", robotId)
         request = request.replace("{3}", sessionDetailsRequest.id)
         response = requests.post(request, data=sessionDetailsRequest.toJSON(), auth=self.navi_auth)
-        return json.loads(response.content)
+        return GenericResponse(response.content)
 
     def isSessionExisting(self, robotId, sessionId):
-        sessions = self.getSessions(robotId)['sessions']
+        sessions = self.getSessions(robotId).sessions
         existing = False
-        for i,session in enumerate(sessions):
-            if session['id'] == sessionId:
+        for i,session in enumerate(sessions.__list__):
+            if session.id == sessionId:
                 existing = True
         return existing
 
@@ -147,11 +243,106 @@ class Navi(object):
         request = request.replace("{1}", self.user_name)
         request = request.replace("{2}", robotId)
         request = request.replace("{3}", sessionId)
-        print request
-        print addOdoRequest.toJSON()
         response = requests.post(request, data=addOdoRequest.toJSON(), auth=self.navi_auth)
-        print response
-        return json.loads(response.content)
+        return GenericResponse(response.content)
+
+    def getDataEntries(self, robotId, sessionId, nodeId):
+        request = self.url + '/' + self.big_data_endpoint
+        request = request.replace("{1}", self.user_name)
+        request = request.replace("{2}", robotId)
+        request = request.replace("{3}", sessionId)
+        request = request.replace("{4}", str(nodeId))
+        response = requests.get(request, auth=self.navi_auth)
+        return GenericResponse(response.content)
+
+    def addOrUpdateDataElement(self, robotId, sessionId, node, dataElement):
+        if isinstance(node, (int,long)):
+            nodeId = node
+        elif isinstance(node, GenericResponse):
+            nodeId = node.id
+        data_entries = self.getDataEntries(robotId, sessionId, nodeId)
+        data_exists = False
+        for i,entry in enumerate(data_entries.__list__):
+            if entry.id == dataElement.id:
+                data_exists = True
+        if data_exists:
+            print 'Existence test for ID', dataElement.id, 'passed - Updating it!'
+            self.updateDataElement(robotId, sessionId, nodeId, dataElement)
+        else:
+            print 'Existence test for ID', dataElement.id, 'failed - Adding it!'
+            self.addDataElement(robotId, sessionId, nodeId, dataElement)
+
+    def addDataElement(self, robotId, sessionId, nodeId, dataElement):
+        request = self.url + '/' + self.big_data_element_endpoint
+        request = request.replace("{1}", self.user_name)
+        request = request.replace("{2}", robotId)
+        request = request.replace("{3}", sessionId)
+        request = request.replace("{4}", str(nodeId))
+        request = request.replace("{5}", dataElement.id)
+        response = requests.post(request, data=dataElement.toJSON(), auth=self.navi_auth)
+
+    def updateDataElement(self, robotId, sessionId, nodeId, dataElement):
+        request = self.url + '/' + self.big_data_element_endpoint
+        request = request.replace("{1}", self.user_name)
+        request = request.replace("{2}", robotId)
+        request = request.replace("{3}", sessionId)
+        request = request.replace("{4}", str(nodeId))
+        request = request.replace("{5}", dataElement.id)
+        response = requests.put(request, data=dataElement.toJSON(), auth=self.navi_auth)
+
+    def getNodes(self, robotId, sessionId):
+        request = self.url + '/' + self.nodes_endpoint
+        request = request.replace("{1}", self.user_name)
+        request = request.replace("{2}", robotId)
+        request = request.replace("{3}", sessionId)
+        response = requests.get(request, auth=self.navi_auth)
+        return GenericResponse(response.content)
+
+    def getNode(self, robotId, sessionId, nodeId):
+        if isinstance(nodeId, (int,long)):
+            request = self.url + '/' + self.node_endpoint
+            request = request.replace("{4}", str(nodeId))
+        elif isinstance(nodeId, (unicode,str)):
+            request = self.url + '/' + self.node_labelled_endpoint
+            request = request.replace("{4}", nodeId)
+        request = request.replace("{1}", self.user_name)
+        request = request.replace("{2}", robotId)
+        request = request.replace("{3}", sessionId)
+        response = requests.get(request, auth=self.navi_auth)
+        return GenericResponse(response.content)
+
+    def addVariable(self, robotId, sessionId, variableRequest):
+        request = self.url + '/' + self.variable_endpoint
+        request = request.replace("{1}", self.user_name)
+        request = request.replace("{2}", robotId)
+        request = request.replace("{3}", sessionId)
+        request = request.replace("{4}", variableRequest.label)
+        response = requests.post(request, data=variableRequest.toJSON(), auth=self.navi_auth)
+        return GenericResponse(response.content)
+
+    def addFactor(self, robotId, sessionId, factorRequest):
+        request = self.url + '/' + self.factors_endpoint
+        request = request.replace("{1}", self.user_name)
+        request = request.replace("{2}", robotId)
+        request = request.replace("{3}", sessionId)
+        response = requests.post(request, data=factorRequest.toJSON(), auth=self.navi_auth)
+        return GenericResponse(response.content)
+
+    def addBearingRangeFactor(self, robotId, sessionId, bearingRangeRequest):
+        request = self.url + '/' + self.bearing_range_endpoint
+        request = request.replace("{1}", self.user_name)
+        request = request.replace("{2}", robotId)
+        request = request.replace("{3}", sessionId)
+        response = requests.post(request, data=bearingRangeRequest.toJSON(), auth=self.navi_auth)
+        return GenericResponse(response.content)
+
+    def putReady(self, robotId, sessionId, isReady):
+        request = self.url + '/' + self.session_ready_endpoint
+        request = request.replace("{1}", self.user_name)
+        request = request.replace("{2}", robotId)
+        request = request.replace("{3}", sessionId)
+        request = request.replace("{4}", str(isReady).lower())
+        response = requests.put(request, data="", auth=self.navi_auth)
 
 import time
 
@@ -172,7 +363,7 @@ else:
 print robot
 print ''
 
-sessionId = 'PythonSession'
+sessionId = 'PythonBotSession'
 
 if (navi.isSessionExisting(robotId, sessionId)):
     session = navi.getSession(robotId, sessionId)
@@ -190,7 +381,40 @@ for i in xrange(0,6):
     delta_measurement = np.array([[10.0], [0], [np.pi/3.0]])
     p_odo = np.array([[0.1, 0.0, 0.0],[0.0, 0.1, 0.0],[0.0, 0.0, 0.1]])
     print ' - Measurement', i, ': Adding new odometry measurement:'
-    print delta_measurement, '...'
+    print delta_measurement
 
     new_odometry_measurement = AddOdometryRequest(str(time.time()),delta_measurement,p_odo)
     add_odo_response = navi.addOdometryMeasurement(robotId, sessionId, new_odometry_measurement)
+    print ''
+
+    print ' - Adding image data to the pose...'
+    navi.addOrUpdateDataElement(robotId, sessionId, add_odo_response.variable, img_request)
+
+nodes = navi.getNodes(robotId, sessionId)
+
+# By NeoID
+node = navi.getNode(robotId, sessionId, nodes.nodes.__list__[0].id)
+
+# By Synchrony label
+node = navi.getNode(robotId, sessionId, nodes.nodes.__list__[0].label)
+
+new_landmark = VariableRequest("l1", "Point2", ["LANDMARK"])
+response = navi.addVariable(robotId, sessionId, new_landmark)
+newBearingRangeFactor = BearingRangeRequest("x1", "l1",
+                                            DistributionRequest("Normal", np.array([[0.0], [0.1]])),
+                                            DistributionRequest("Normal", np.array([[20.0], [1.0]])))
+navi.addBearingRangeFactor(robotId, sessionId, newBearingRangeFactor)
+newBearingRangeFactor = BearingRangeRequest("x6", "l1",
+                                            DistributionRequest("Normal", np.array([[0.0], [0.1]])),
+                                            DistributionRequest("Normal", np.array([[20.0], [1.0]])))
+navi.addBearingRangeFactor(robotId, sessionId, newBearingRangeFactor)
+
+navi.putReady(robotId, sessionId, True)
+
+sessionLatest = navi.getSession(robotId, sessionId)
+while session.lastSolvedTimestamp != sessionLatest.lastSolvedTimestamp:
+    print 'Comparing latest session solver timestamp $(sessionLatest.lastSolvedTimestamp) with original $(session.lastSolvedTimestamp) - still the same so sleeping for 2 seconds'
+    time.sleep(2)
+    sessionLatest = navi.getSession(robotId, sessionId)
+
+print 'Session solver finished!!!'
