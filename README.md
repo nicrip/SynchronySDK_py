@@ -2,7 +2,8 @@
 ### A Python SDK for the Synchrony project
 
 #### Contains
- - Navi.py - contains main SDK interface, running will run simple hexagonal test
+ - Navi.py - contains main SDK interface
+ - hexagonal_example.py - simple synthetic robot moving in a hexagonal path
  
 #### Dependencies  
 
