@@ -4,6 +4,7 @@ import json
 import urllib3.contrib.pyopenssl
 import ast
 import base64
+import numpy as np
 
 urllib3.contrib.pyopenssl.inject_into_urllib3()
 
@@ -27,12 +28,6 @@ class SessionDetailsRequest(object):
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
-class ReadImageIntoDataRequest(BigDataElementRequest):
-    def __init__(self, file, id, description, mime_type):
-        with open(file,'rb') as f:
-            img = f.read()
-        return BigDataElementRequest(id, "Mongo", description, base64.b64encode(img), mime_type)
-
 class BigDataElementRequest(object):
     def __init__(self, id, source_name, description, data, mime_type):
         self.id = id
@@ -41,8 +36,23 @@ class BigDataElementRequest(object):
         self.data = data
         self.mimeType = mime_type
 
+    def ReadImageIntoDataRequest(self, img_file):
+        with open(img_file,'rb') as f:
+            img = f.read()
+        self.data = base64.b64encode(img)
+
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
+class AddOdometryRequest(object):
+    def __init__(self, timestamp, delta_measurement, p_odo, N=None):
+        self.timestamp = timestamp
+        self.deltaMeasurement = (delta_measurement.flatten().tolist())
+        self.pOdo = (p_odo.T.tolist())
+        self.N = N
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__)
 
 class Navi(object):
     def __init__(self, json_auth):
@@ -63,6 +73,7 @@ class Navi(object):
         self.robot_endpoint = "api/v0/users/{1}/robots/{2}"
         self.sessions_endpoint = "api/v0/users/{1}/robots/{2}/sessions"
         self.session_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}"
+        self.odo_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}/odometry"
 
     def getStatus(self):
         request = self.url + '/' + self.status_endpoint
@@ -131,6 +142,19 @@ class Navi(object):
                 existing = True
         return existing
 
+    def addOdometryMeasurement(self, robotId, sessionId, addOdoRequest):
+        request = self.url + '/' + self.odo_endpoint
+        request = request.replace("{1}", self.user_name)
+        request = request.replace("{2}", robotId)
+        request = request.replace("{3}", sessionId)
+        print request
+        print addOdoRequest.toJSON()
+        response = requests.post(request, data=addOdoRequest.toJSON(), auth=self.navi_auth)
+        print response
+        return json.loads(response.content)
+
+import time
+
 navi = Navi('./synchronyConfig.json')
 
 navi.printStatus()
@@ -160,5 +184,13 @@ else:
 print session
 print ''
 
-test = ReadImageIntoDataRequest('/home/rypkema/Desktop/navibility2.png', 1, 2, 3)
-print test
+img_request = BigDataElementRequest('navability_img.png', 'TestImage', 'NavAbility logo', None, 'image/png')
+img_request.ReadImageIntoDataRequest('/home/rypkema/Desktop/navibility2.png')
+for i in xrange(0,6):
+    delta_measurement = np.array([[10.0], [0], [np.pi/3.0]])
+    p_odo = np.array([[0.1, 0.0, 0.0],[0.0, 0.1, 0.0],[0.0, 0.0, 0.1]])
+    print ' - Measurement', i, ': Adding new odometry measurement:'
+    print delta_measurement, '...'
+
+    new_odometry_measurement = AddOdometryRequest(str(time.time()),delta_measurement,p_odo)
+    add_odo_response = navi.addOdometryMeasurement(robotId, sessionId, new_odometry_measurement)
