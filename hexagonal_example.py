@@ -1,75 +1,61 @@
 import time
 from Navi import *
+from NaviUtils import *
 
-navi = Navi('./synchronyConfig.json')
+robotId = 'PythonTestBot'
+sessionId = 'TestPythonBotSession13'
 
+navi = Navi('/home/dehann/Documents/synchronyConfig.json')
+# check the server is alive
 navi.printStatus()
 print ''
 
-robotId = 'PythonBot'
+# configure the robot and session
+robot = registerRobot(navi, robotId)
+session = registerSession(navi, robotId, sessionId)
 
-if (navi.isRobotExisting(robotId)):
-    robot = navi.getRobot(robotId)
-    print 'robot exists!'
-else:
-    new_robot = RobotRequest(robotId, 'My New Python Bot', 'Description of my neat Python robot', 'Active')
-    robot = navi.addRobot(new_robot)
-    print 'adding new robot...'
-print robot
-print ''
 
-sessionId = 'PythonBotSession'
-
-if (navi.isSessionExisting(robotId, sessionId)):
-    session = navi.getSession(robotId, sessionId)
-    print 'session exists!'
-else:
-    new_session = SessionDetailsRequest(sessionId,'A test Python session','Pose2')
-    session = navi.addSession(robotId, new_session)
-    print 'adding new session...'
-print session
-print ''
-
-img_request = BigDataElementRequest('navability_img.png', 'TestImage', 'NavAbility logo', None, 'image/png')
-img_request.ReadImageIntoDataRequest('/home/rypkema/Desktop/navibility2.png')
+img_request = BigDataElementRequest('pexels_small.png', 'TestImage', 'test image', None, 'image/png')
+img_request.ReadImageIntoDataRequest('/home/dehann/software/SynchronySDK_py/data/pexels_small.png')
+print 'starting loop'
 for i in xrange(0,6):
     delta_measurement = np.array([[10.0], [0], [np.pi/3.0]])
     p_odo = np.array([[0.1, 0.0, 0.0],[0.0, 0.1, 0.0],[0.0, 0.0, 0.1]])
     print ' - Measurement', i, ': Adding new odometry measurement:'
     print delta_measurement
 
-    new_odometry_measurement = AddOdometryRequest(str(time.time()),delta_measurement,p_odo)
-    add_odo_response = navi.addOdometryMeasurement(robotId, sessionId, new_odometry_measurement)
+    add_odo_response = addNodeFactor_OdoNormal(navi, time.time(), robotId, sessionId, delta_measurement, p_odo)
     print ''
 
     print ' - Adding image data to the pose...'
     navi.addOrUpdateDataElement(robotId, sessionId, add_odo_response.variable, img_request)
 
+
+# add a landmark with a loop closure betwen x1 and x6
+addNode_landmark(navi, robotId, sessionId, "l1")
+
+addFactor_BearingRangeNormal(navi, robotId, sessionId, "x1", "l1", 0.0, 20.0)
+addFactor_BearingRangeNormal(navi, robotId, sessionId, "x6", "l1", 0.0, 20.0)
+
+# tell the solver all these new nodes are ready to be solved
+navi.putReady(robotId, sessionId, True)
+print 'finished uploading session!!!'
+
+# initial versions of solves are slow, so dont be in a too much of a hurry just yet
+sessionLatest = navi.getSession(robotId, sessionId)
+# while session.lastSolvedTimestamp != sessionLatest.lastSolvedTimestamp:
+#     print 'Comparing latest session solver timestamp $(sessionLatest.lastSolvedTimestamp) with original $(session.lastSolvedTimestamp) - still the same so sleeping for 2 seconds'
+#     time.sleep(2)
+#     sessionLatest = navi.getSession(robotId, sessionId)
+
+
+# Inspect the contects of the nodes at any time!
 nodes = navi.getNodes(robotId, sessionId)
 
-# By NeoID
-node = navi.getNode(robotId, sessionId, nodes.nodes.__list__[0].id)
 
 # By Synchrony label
 node = navi.getNode(robotId, sessionId, nodes.nodes.__list__[0].label)
+# node = navi.getNode(robotId, sessionId, nodes.nodes.__list__[0].id) # By NeoID
 
-new_landmark = VariableRequest("l1", "Point2", ["LANDMARK"])
-response = navi.addVariable(robotId, sessionId, new_landmark)
-newBearingRangeFactor = BearingRangeRequest("x1", "l1",
-                                            DistributionRequest("Normal", np.array([[0.0], [0.1]])),
-                                            DistributionRequest("Normal", np.array([[20.0], [1.0]])))
-navi.addBearingRangeFactor(robotId, sessionId, newBearingRangeFactor)
-newBearingRangeFactor = BearingRangeRequest("x6", "l1",
-                                            DistributionRequest("Normal", np.array([[0.0], [0.1]])),
-                                            DistributionRequest("Normal", np.array([[20.0], [1.0]])))
-navi.addBearingRangeFactor(robotId, sessionId, newBearingRangeFactor)
 
-navi.putReady(robotId, sessionId, True)
-
-sessionLatest = navi.getSession(robotId, sessionId)
-while session.lastSolvedTimestamp != sessionLatest.lastSolvedTimestamp:
-    print 'Comparing latest session solver timestamp $(sessionLatest.lastSolvedTimestamp) with original $(session.lastSolvedTimestamp) - still the same so sleeping for 2 seconds'
-    time.sleep(2)
-    sessionLatest = navi.getSession(robotId, sessionId)
-
-print 'Session solver finished!!!'
+print 'done.'

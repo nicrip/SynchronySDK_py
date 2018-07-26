@@ -170,6 +170,18 @@ class Navi(object):
         self.factor_endpoint = "$factorsEndpoint/{4}"
         self.bearing_range_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}/factors/bearingrange"
         self.session_ready_endpoint = "api/v0/users/{1}/robots/{2}/sessions/{3}/ready/{4}"
+        # context
+        self.sessionId=""
+        self.robotId=""
+        self.userId=""
+
+    # # these set functions do not work for some reason
+    # def setSession(self, sessionname):
+    #     self.sessionId = sessionname
+    # def setRobot(self, robotname):
+    #     self.sessionId = robotname
+    # def setUser(self, username):
+    #     self.sessionId = username
 
     def getStatus(self):
         request = self.url + '/' + self.status_endpoint
