@@ -184,32 +184,44 @@ class Navi(object):
     #     self.sessionId = username
 
     def getStatus(self):
-        request = self.url + '/' + self.status_endpoint
-        response = requests.get(request, auth=self.navi_auth)
-        return str(response.content)
+        try:
+            request = self.url + '/' + self.status_endpoint
+            response = requests.get(request, auth=self.navi_auth)
+            return str(response.content)
+        except Exception as e:
+            print e
 
     def printStatus(self):
         print self.getStatus()
 
     def getRobots(self):
-        request = self.url + '/' + self.robots_endpoint
-        request = request.replace("{1}", self.user_name)
-        response = requests.get(request, auth=self.navi_auth)
-        return GenericResponse(response.content)
+        try:
+            request = self.url + '/' + self.robots_endpoint
+            request = request.replace("{1}", self.user_name)
+            response = requests.get(request, auth=self.navi_auth)
+            return GenericResponse(response.content)
+        except Exception as e:
+            print e
 
     def getRobot(self, robotId):
-        request = self.url + '/' + self.robot_endpoint
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotId)
-        response = requests.get(request, auth=self.navi_auth)
-        return GenericResponse(response.content)
+        try:
+            request = self.url + '/' + self.robot_endpoint
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotId)
+            response = requests.get(request, auth=self.navi_auth)
+            return GenericResponse(response.content)
+        except Exception as e:
+            print e
 
     def addRobot(self, robotRequest):
-        request = self.url + '/' + self.robot_endpoint
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotRequest.id)
-        response = requests.post(request, data=robotRequest.toJSON(), auth=self.navi_auth)
-        return GenericResponse(response.content)
+        try:
+            request = self.url + '/' + self.robot_endpoint
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotRequest.id)
+            response = requests.post(request, data=robotRequest.toJSON(), auth=self.navi_auth)
+            return GenericResponse(response.content)
+        except Exception as e:
+            print e
 
     def isRobotExisting(self, robotId):
         robots = self.getRobots().robots
@@ -220,27 +232,36 @@ class Navi(object):
         return existing
 
     def getSessions(self, robotId):
-        request = self.url + '/' + self.sessions_endpoint
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotId)
-        response = requests.get(request, auth=self.navi_auth)
-        return GenericResponse(response.content)
+        try:
+            request = self.url + '/' + self.sessions_endpoint
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotId)
+            response = requests.get(request, auth=self.navi_auth)
+            return GenericResponse(response.content)
+        except Exception as e:
+            print e
 
     def getSession(self, robotId, sessionId):
-        request = self.url + '/' + self.session_endpoint
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotId)
-        request = request.replace("{3}", sessionId)
-        response = requests.get(request, auth=self.navi_auth)
-        return GenericResponse(response.content)
+        try:
+            request = self.url + '/' + self.session_endpoint
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotId)
+            request = request.replace("{3}", sessionId)
+            response = requests.get(request, auth=self.navi_auth)
+            return GenericResponse(response.content)
+        except Exception as e:
+            print e
 
     def addSession(self, robotId, sessionDetailsRequest):
-        request = self.url + '/' + self.session_endpoint
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotId)
-        request = request.replace("{3}", sessionDetailsRequest.id)
-        response = requests.post(request, data=sessionDetailsRequest.toJSON(), auth=self.navi_auth)
-        return GenericResponse(response.content)
+        try:
+            request = self.url + '/' + self.session_endpoint
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotId)
+            request = request.replace("{3}", sessionDetailsRequest.id)
+            response = requests.post(request, data=sessionDetailsRequest.toJSON(), auth=self.navi_auth)
+            return GenericResponse(response.content)
+        except Exception as e:
+            print e
 
     def isSessionExisting(self, robotId, sessionId):
         sessions = self.getSessions(robotId).sessions
@@ -251,21 +272,27 @@ class Navi(object):
         return existing
 
     def addOdometryMeasurement(self, robotId, sessionId, addOdoRequest):
-        request = self.url + '/' + self.odo_endpoint
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotId)
-        request = request.replace("{3}", sessionId)
-        response = requests.post(request, data=addOdoRequest.toJSON(), auth=self.navi_auth)
-        return GenericResponse(response.content)
+        try:
+            request = self.url + '/' + self.odo_endpoint
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotId)
+            request = request.replace("{3}", sessionId)
+            response = requests.post(request, data=addOdoRequest.toJSON(), auth=self.navi_auth)
+            return GenericResponse(response.content)
+        except Exception as e:
+            print e
 
     def getDataEntries(self, robotId, sessionId, nodeId):
-        request = self.url + '/' + self.big_data_endpoint
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotId)
-        request = request.replace("{3}", sessionId)
-        request = request.replace("{4}", str(nodeId))
-        response = requests.get(request, auth=self.navi_auth)
-        return GenericResponse(response.content)
+        try:
+            request = self.url + '/' + self.big_data_endpoint
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotId)
+            request = request.replace("{3}", sessionId)
+            request = request.replace("{4}", str(nodeId))
+            response = requests.get(request, auth=self.navi_auth)
+            return GenericResponse(response.content)
+        except Exception as e:
+            print e
 
     def addOrUpdateDataElement(self, robotId, sessionId, node, dataElement):
         if isinstance(node, (int,long)):
@@ -285,73 +312,97 @@ class Navi(object):
             self.addDataElement(robotId, sessionId, nodeId, dataElement)
 
     def addDataElement(self, robotId, sessionId, nodeId, dataElement):
-        request = self.url + '/' + self.big_data_element_endpoint
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotId)
-        request = request.replace("{3}", sessionId)
-        request = request.replace("{4}", str(nodeId))
-        request = request.replace("{5}", dataElement.id)
-        response = requests.post(request, data=dataElement.toJSON(), auth=self.navi_auth)
+        try:
+            request = self.url + '/' + self.big_data_element_endpoint
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotId)
+            request = request.replace("{3}", sessionId)
+            request = request.replace("{4}", str(nodeId))
+            request = request.replace("{5}", dataElement.id)
+            response = requests.post(request, data=dataElement.toJSON(), auth=self.navi_auth)
+        except Exception as e:
+            print e
 
     def updateDataElement(self, robotId, sessionId, nodeId, dataElement):
-        request = self.url + '/' + self.big_data_element_endpoint
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotId)
-        request = request.replace("{3}", sessionId)
-        request = request.replace("{4}", str(nodeId))
-        request = request.replace("{5}", dataElement.id)
-        response = requests.put(request, data=dataElement.toJSON(), auth=self.navi_auth)
+        try:
+            request = self.url + '/' + self.big_data_element_endpoint
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotId)
+            request = request.replace("{3}", sessionId)
+            request = request.replace("{4}", str(nodeId))
+            request = request.replace("{5}", dataElement.id)
+            response = requests.put(request, data=dataElement.toJSON(), auth=self.navi_auth)
+        except Exception as e:
+            print e
 
     def getNodes(self, robotId, sessionId):
-        request = self.url + '/' + self.nodes_endpoint
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotId)
-        request = request.replace("{3}", sessionId)
-        response = requests.get(request, auth=self.navi_auth)
-        return GenericResponse(response.content)
+        try:
+            request = self.url + '/' + self.nodes_endpoint
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotId)
+            request = request.replace("{3}", sessionId)
+            response = requests.get(request, auth=self.navi_auth)
+            return GenericResponse(response.content)
+        except Exception as e:
+            print e
 
     def getNode(self, robotId, sessionId, nodeId):
-        if isinstance(nodeId, (int,long)):
-            request = self.url + '/' + self.node_endpoint
-            request = request.replace("{4}", str(nodeId))
-        elif isinstance(nodeId, (unicode,str)):
-            request = self.url + '/' + self.node_labelled_endpoint
-            request = request.replace("{4}", nodeId)
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotId)
-        request = request.replace("{3}", sessionId)
-        response = requests.get(request, auth=self.navi_auth)
-        return GenericResponse(response.content)
+        try:
+            if isinstance(nodeId, (int,long)):
+                request = self.url + '/' + self.node_endpoint
+                request = request.replace("{4}", str(nodeId))
+            elif isinstance(nodeId, (unicode,str)):
+                request = self.url + '/' + self.node_labelled_endpoint
+                request = request.replace("{4}", nodeId)
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotId)
+            request = request.replace("{3}", sessionId)
+            response = requests.get(request, auth=self.navi_auth)
+            return GenericResponse(response.content)
+        except Exception as e:
+            print e
 
     def addVariable(self, robotId, sessionId, variableRequest):
-        request = self.url + '/' + self.variable_endpoint
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotId)
-        request = request.replace("{3}", sessionId)
-        request = request.replace("{4}", variableRequest.label)
-        response = requests.post(request, data=variableRequest.toJSON(), auth=self.navi_auth)
-        return GenericResponse(response.content)
+        try:
+            request = self.url + '/' + self.variable_endpoint
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotId)
+            request = request.replace("{3}", sessionId)
+            request = request.replace("{4}", variableRequest.label)
+            response = requests.post(request, data=variableRequest.toJSON(), auth=self.navi_auth)
+            return GenericResponse(response.content)
+        except Exception as e:
+            print e
 
     def addFactor(self, robotId, sessionId, factorRequest):
-        request = self.url + '/' + self.factors_endpoint
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotId)
-        request = request.replace("{3}", sessionId)
-        response = requests.post(request, data=factorRequest.toJSON(), auth=self.navi_auth)
-        return GenericResponse(response.content)
+        try:
+            request = self.url + '/' + self.factors_endpoint
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotId)
+            request = request.replace("{3}", sessionId)
+            response = requests.post(request, data=factorRequest.toJSON(), auth=self.navi_auth)
+            return GenericResponse(response.content)
+        except Exception as e:
+            print e
 
     def addBearingRangeFactor(self, robotId, sessionId, bearingRangeRequest):
-        request = self.url + '/' + self.bearing_range_endpoint
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotId)
-        request = request.replace("{3}", sessionId)
-        response = requests.post(request, data=bearingRangeRequest.toJSON(), auth=self.navi_auth)
-        return GenericResponse(response.content)
+        try:
+            request = self.url + '/' + self.bearing_range_endpoint
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotId)
+            request = request.replace("{3}", sessionId)
+            response = requests.post(request, data=bearingRangeRequest.toJSON(), auth=self.navi_auth)
+            return GenericResponse(response.content)
+        except Exception as e:
+            print e
 
     def putReady(self, robotId, sessionId, isReady):
-        request = self.url + '/' + self.session_ready_endpoint
-        request = request.replace("{1}", self.user_name)
-        request = request.replace("{2}", robotId)
-        request = request.replace("{3}", sessionId)
-        request = request.replace("{4}", str(isReady).lower())
-        response = requests.put(request, data="", auth=self.navi_auth)
+        try:
+            request = self.url + '/' + self.session_ready_endpoint
+            request = request.replace("{1}", self.user_name)
+            request = request.replace("{2}", robotId)
+            request = request.replace("{3}", sessionId)
+            request = request.replace("{4}", str(isReady).lower())
+            response = requests.put(request, data="", auth=self.navi_auth)
+        except Exception as e:
+            print e
