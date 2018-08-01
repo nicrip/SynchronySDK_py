@@ -184,26 +184,36 @@ class Navi(object):
     #     self.sessionId = username
 
     def getStatus(self):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.status_endpoint
             response = requests.get(request, auth=self.navi_auth)
             return str(response.content)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def printStatus(self):
         print self.getStatus()
 
     def getRobots(self):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.robots_endpoint
             request = request.replace("{1}", self.user_name)
             response = requests.get(request, auth=self.navi_auth)
             return GenericResponse(response.content)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def getRobot(self, robotId):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.robot_endpoint
             request = request.replace("{1}", self.user_name)
@@ -211,9 +221,13 @@ class Navi(object):
             response = requests.get(request, auth=self.navi_auth)
             return GenericResponse(response.content)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def addRobot(self, robotRequest):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.robot_endpoint
             request = request.replace("{1}", self.user_name)
@@ -221,6 +235,8 @@ class Navi(object):
             response = requests.post(request, data=robotRequest.toJSON(), auth=self.navi_auth)
             return GenericResponse(response.content)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def isRobotExisting(self, robotId):
@@ -232,6 +248,8 @@ class Navi(object):
         return existing
 
     def getSessions(self, robotId):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.sessions_endpoint
             request = request.replace("{1}", self.user_name)
@@ -239,9 +257,13 @@ class Navi(object):
             response = requests.get(request, auth=self.navi_auth)
             return GenericResponse(response.content)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def getSession(self, robotId, sessionId):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.session_endpoint
             request = request.replace("{1}", self.user_name)
@@ -250,9 +272,13 @@ class Navi(object):
             response = requests.get(request, auth=self.navi_auth)
             return GenericResponse(response.content)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def addSession(self, robotId, sessionDetailsRequest):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.session_endpoint
             request = request.replace("{1}", self.user_name)
@@ -261,6 +287,8 @@ class Navi(object):
             response = requests.post(request, data=sessionDetailsRequest.toJSON(), auth=self.navi_auth)
             return GenericResponse(response.content)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def isSessionExisting(self, robotId, sessionId):
@@ -272,6 +300,8 @@ class Navi(object):
         return existing
 
     def addOdometryMeasurement(self, robotId, sessionId, addOdoRequest):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.odo_endpoint
             request = request.replace("{1}", self.user_name)
@@ -280,9 +310,13 @@ class Navi(object):
             response = requests.post(request, data=addOdoRequest.toJSON(), auth=self.navi_auth)
             return GenericResponse(response.content)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def getDataEntries(self, robotId, sessionId, nodeId):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.big_data_endpoint
             request = request.replace("{1}", self.user_name)
@@ -292,6 +326,8 @@ class Navi(object):
             response = requests.get(request, auth=self.navi_auth)
             return GenericResponse(response.content)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def addOrUpdateDataElement(self, robotId, sessionId, node, dataElement):
@@ -312,6 +348,8 @@ class Navi(object):
             self.addDataElement(robotId, sessionId, nodeId, dataElement)
 
     def addDataElement(self, robotId, sessionId, nodeId, dataElement):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.big_data_element_endpoint
             request = request.replace("{1}", self.user_name)
@@ -321,9 +359,13 @@ class Navi(object):
             request = request.replace("{5}", dataElement.id)
             response = requests.post(request, data=dataElement.toJSON(), auth=self.navi_auth)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def updateDataElement(self, robotId, sessionId, nodeId, dataElement):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.big_data_element_endpoint
             request = request.replace("{1}", self.user_name)
@@ -333,9 +375,13 @@ class Navi(object):
             request = request.replace("{5}", dataElement.id)
             response = requests.put(request, data=dataElement.toJSON(), auth=self.navi_auth)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def getNodes(self, robotId, sessionId):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.nodes_endpoint
             request = request.replace("{1}", self.user_name)
@@ -344,9 +390,13 @@ class Navi(object):
             response = requests.get(request, auth=self.navi_auth)
             return GenericResponse(response.content)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def getNode(self, robotId, sessionId, nodeId):
+        request = None
+        response = None
         try:
             if isinstance(nodeId, (int,long)):
                 request = self.url + '/' + self.node_endpoint
@@ -360,9 +410,13 @@ class Navi(object):
             response = requests.get(request, auth=self.navi_auth)
             return GenericResponse(response.content)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def addVariable(self, robotId, sessionId, variableRequest):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.variable_endpoint
             request = request.replace("{1}", self.user_name)
@@ -372,9 +426,13 @@ class Navi(object):
             response = requests.post(request, data=variableRequest.toJSON(), auth=self.navi_auth)
             return GenericResponse(response.content)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def addFactor(self, robotId, sessionId, factorRequest):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.factors_endpoint
             request = request.replace("{1}", self.user_name)
@@ -383,9 +441,13 @@ class Navi(object):
             response = requests.post(request, data=factorRequest.toJSON(), auth=self.navi_auth)
             return GenericResponse(response.content)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def addBearingRangeFactor(self, robotId, sessionId, bearingRangeRequest):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.bearing_range_endpoint
             request = request.replace("{1}", self.user_name)
@@ -394,9 +456,13 @@ class Navi(object):
             response = requests.post(request, data=bearingRangeRequest.toJSON(), auth=self.navi_auth)
             return GenericResponse(response.content)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
 
     def putReady(self, robotId, sessionId, isReady):
+        request = None
+        response = None
         try:
             request = self.url + '/' + self.session_ready_endpoint
             request = request.replace("{1}", self.user_name)
@@ -405,4 +471,6 @@ class Navi(object):
             request = request.replace("{4}", str(isReady).lower())
             response = requests.put(request, data="", auth=self.navi_auth)
         except Exception as e:
+            print 'Request:', request
+            print 'Response:', response
             print e
