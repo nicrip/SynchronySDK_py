@@ -121,6 +121,23 @@ class VariableRequest(object):
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
+class FactorBody(object):
+    __init__(self, factortype, packedfactortype, encoding, body):
+        self.factorType # String
+        self.packedFactorType # String
+        self.encoding # String
+        self.body # String
+
+class FactorRequest(object):
+    def __init__(self, variables, body, autoinit, ready=0):
+        self.variables = variables # Vector{String}
+        self.body = body # FactorBody
+        self.autoinit = autoinit # Nullable{Bool}
+        self.ready = ready # Nullable{Bool}
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
 class DistributionRequest(object):
     def __init__(self, dist_type, params):
         self.distType = dist_type

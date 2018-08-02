@@ -3,7 +3,7 @@ from Navi import *
 from NaviUtils import *
 
 robotId = 'PythonTestBot'
-sessionId = 'TestPythonBotSession14'
+sessionId = 'TestPythonBotSession13'
 
 navi = Navi('/home/dehann/Documents/synchronyConfig.json')
 # check the server is alive
